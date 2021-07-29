@@ -5,6 +5,7 @@ from deepvac.datasets import DatasetBase
 class FileLineEncoderDataset(DatasetBase):
     word_set = set()
     word_dict = {}
+    word_list = []
 
     @staticmethod
     def build_vocab_from_file(vocab_file_path):
@@ -12,7 +13,8 @@ class FileLineEncoderDataset(DatasetBase):
             for s in f:
                 s = s.strip()
                 FileLineEncoderDataset.word_set.update(set(s))
-        FileLineEncoderDataset.word_dict = {word: i for i, word in enumerate(FileLineEncoderDataset.word_set)}
+        FileLineEncoderDataset.word_list = list(FileLineEncoderDataset.word_set)
+        FileLineEncoderDataset.word_dict = {word: i for i, word in enumerate(FileLineEncoderDataset.word_list)}
 
     @staticmethod
     def get_token_num():
@@ -20,6 +22,13 @@ class FileLineEncoderDataset(DatasetBase):
         if size == 0:
             LOG.logE("you must build vocab via build_vocab_from_file() API first.", exit=True)
         return size
+    
+    @staticmethod
+    def index2string(idx_list):
+        s = ''
+        for i in idx_list:
+            s += FileLineEncoderDataset.word_list[i]
+        return s
 
     def __init__(self, deepvac_config, file_path, seq_len=14):
         super(FileLineEncoderDataset, self).__init__(deepvac_config)
@@ -31,11 +40,10 @@ class FileLineEncoderDataset(DatasetBase):
             LOG.logE("you must build vocab via build_vocab_from_file() API first.", exit=True)
 
         with open(self.file_path, 'r', encoding='utf-8') as f:
-            for s in f:
-                s = s.strip()
+            for original_s in f:
+                s = original_s.strip().replace('，','').replace('。','')
                 if len(s) < self.seq_len + 1:
                     continue
-
                 for i in range(0, len(s)- seq_len - 1):
                     sample = [s[i:i+seq_len], s[i+1: i+seq_len+1] ] 
                     self.sample_list.append(sample)
