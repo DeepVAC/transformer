@@ -4,70 +4,53 @@ import pickle
 import torch
 from torch import optim
 from torchvision import transforms as trans
-from deepvac import config, AttrDict, new, interpret, fork
+from deepvac import AttrDict, new, interpret, fork
 from data.dataloader import FileLineEncoderDataset
 from modules.model_transformer_encoder import TransformerEncoderNet
 
 torch.backends.cudnn.benchmark=True
-config = new('TransformerTrain')
+encoder_config = new('TransformerEncoderTrain')
 ## -------------------- global ------------------
-config.file_path_vocab = 'data/ancient_chinese.txt'
-config.file_path_train = 'data/ancient_chinese_train.txt'
-config.file_path_val = 'data/ancient_chinese_val.txt'
+encoder_config.file_path_vocab = 'data/ancient_chinese.txt'
+encoder_config.file_path_train = 'data/ancient_chinese_train.txt'
+encoder_config.file_path_val = 'data/ancient_chinese_val.txt'
 
-config.pin_memory = True if torch.cuda.is_available() else False
-config.seq_len = 14
-config.train_batch_size = 256
-config.val_batch_size = 8
-config.embedding_size = 512
-config.nhid = 2048
-config.nlayers = 6
-config.nhead = 8
-config.dropout = 0.1
+encoder_config.pin_memory = True if torch.cuda.is_available() else False
+encoder_config.seq_len = 14
+encoder_config.train_batch_size = 256
+encoder_config.val_batch_size = 8
+encoder_config.embedding_size = 512
+encoder_config.nhid = 2048
+encoder_config.nlayers = 6
+encoder_config.nhead = 8
+encoder_config.dropout = 0.1
 
 ## -------------------- loader ------------------
-config.num_workers = 3
-FileLineEncoderDataset.build_vocab_from_file(config.file_path_vocab)
-config.ntokens = FileLineEncoderDataset.get_token_num()
-config.core.TransformerTrain.train_dataset = FileLineEncoderDataset(config, config.file_path_train, config.seq_len)
-config.core.TransformerTrain.train_loader = torch.utils.data.DataLoader(config.core.TransformerTrain.train_dataset, batch_size=config.train_batch_size, shuffle=True, num_workers=config.num_workers, pin_memory=config.pin_memory)
-config.core.TransformerTrain.val_dataset = FileLineEncoderDataset(config, config.file_path_val, config.seq_len)
-config.core.TransformerTrain.val_loader = torch.utils.data.DataLoader(config.core.TransformerTrain.val_dataset, batch_size=config.val_batch_size, shuffle=False, num_workers=config.num_workers, pin_memory=config.pin_memory)
+encoder_config.num_workers = 3
+FileLineEncoderDataset.build_vocab_from_file(encoder_config.file_path_vocab)
+encoder_config.ntokens = FileLineEncoderDataset.get_token_num()
+encoder_config.core.TransformerEncoderTrain.train_dataset = FileLineEncoderDataset(encoder_config, encoder_config.file_path_train, encoder_config.seq_len)
+encoder_config.core.TransformerEncoderTrain.train_loader = torch.utils.data.DataLoader(encoder_config.core.TransformerEncoderTrain.train_dataset, batch_size=encoder_config.train_batch_size, shuffle=True, num_workers=encoder_config.num_workers, pin_memory=encoder_config.pin_memory)
+encoder_config.core.TransformerEncoderTrain.val_dataset = FileLineEncoderDataset(encoder_config, encoder_config.file_path_val, encoder_config.seq_len)
+encoder_config.core.TransformerEncoderTrain.val_loader = torch.utils.data.DataLoader(encoder_config.core.TransformerEncoderTrain.val_dataset, batch_size=encoder_config.val_batch_size, shuffle=False, num_workers=encoder_config.num_workers, pin_memory=encoder_config.pin_memory)
 
 ## ------------------ common ------------------
-config.core.TransformerTrain.epoch_num = 200
-config.core.TransformerTrain.save_num = 1
-config.core.TransformerTrain.model_path = None
-config.core.TransformerTrain.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-config.core.TransformerTrain.output_dir = 'output'
-config.core.TransformerTrain.log_every = 10
-config.core.TransformerTrain.disable_git = False
-config.core.TransformerTrain.model_reinterpret_cast = True
-config.core.TransformerTrain.cast_state_dict_strict = False
-# load script and quantize model path
-#config.core.TransformerTrain.jit_model_path = "<your-script-or-quantize-model-path>"
-
-## -------------------- training ------------------
-## -------------------- tensorboard ------------------
-# config.core.TransformerTrain.tensorboard_port = "6007"
-# config.core.TransformerTrain.tensorboard_ip = None
-
-## -------------------- script and quantize ------------------
-# config.cast.TraceCast = AttrDict()
-# config.cast.TraceCast.model_dir = "./script.pt"
-# config.cast.TraceCast.static_quantize_dir = "./script.sq"
-# config.cast.TraceCast.dynamic_quantize_dir = "./quantize.sq"
-
+encoder_config.core.TransformerEncoderTrain.epoch_num = 200
+encoder_config.core.TransformerEncoderTrain.save_num = 1
+encoder_config.core.TransformerEncoderTrain.model_path = None
+encoder_config.core.TransformerEncoderTrain.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+encoder_config.core.TransformerEncoderTrain.output_dir = 'output'
+encoder_config.core.TransformerEncoderTrain.log_every = 10
+encoder_config.core.TransformerEncoderTrain.disable_git = False
+encoder_config.core.TransformerEncoderTrain.model_reinterpret_cast = True
+encoder_config.core.TransformerEncoderTrain.cast_state_dict_strict = False
 ## -------------------- net and criterion ------------------
-config.core.TransformerTrain.net = TransformerEncoderNet(config.ntokens, config.embedding_size, config.nhead, config.nhid, config.nlayers, config.dropout)
-config.core.TransformerTrain.criterion = torch.nn.CrossEntropyLoss()
+encoder_config.core.TransformerEncoderTrain.net = TransformerEncoderNet(encoder_config.ntokens, encoder_config.embedding_size, encoder_config.nhead, encoder_config.nhid, encoder_config.nlayers, encoder_config.dropout)
+encoder_config.core.TransformerEncoderTrain.criterion = torch.nn.CrossEntropyLoss()
 
 ## -------------------- optimizer and scheduler ------------------
-config.core.TransformerTrain.optimizer = torch.optim.SGD(config.core.TransformerTrain.net.parameters(), lr=0.001)
-config.core.TransformerTrain.scheduler = torch.optim.lr_scheduler.MultiStepLR(config.core.TransformerTrain.optimizer, milestones=[20,40,60,80,100,120,140,160,180], gamma=0.27030 )
+encoder_config.core.TransformerEncoderTrain.optimizer = torch.optim.SGD(encoder_config.core.TransformerEncoderTrain.net.parameters(), lr=0.001)
+encoder_config.core.TransformerEncoderTrain.scheduler = torch.optim.lr_scheduler.MultiStepLR(encoder_config.core.TransformerEncoderTrain.optimizer, milestones=[20,40,60,80,100,120,140,160,180], gamma=0.27030 )
 
-## ------------------ ddp --------------------
-# config.dist_url = 'tcp://localhost:27030'
-# config.world_size = 2
-config.core.TransformerTest = config.core.TransformerTrain.clone()
-config.core.TransformerTest.model_reinterpret_cast = False
+encoder_config.core.TransformerTest = encoder_config.core.TransformerEncoderTrain.clone()
+encoder_config.core.TransformerTest.model_reinterpret_cast = False

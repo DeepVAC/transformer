@@ -11,9 +11,9 @@ from deepvac import LOG, DeepvacTrain
 from modules.utils import generate_square_subsequent_mask
 from data.dataloader import FileLineEncoderDataset
 
-class TransformerTrain(DeepvacTrain):
+class TransformerEncoderTrain(DeepvacTrain):
     def __init__(self, deepvac_config):
-        super(TransformerTrain, self).__init__(deepvac_config)
+        super(TransformerEncoderTrain, self).__init__(deepvac_config)
         self.src_mask = generate_square_subsequent_mask(deepvac_config.seq_len).to(self.config.device)
         self.ntokens = deepvac_config.ntokens
 
@@ -45,9 +45,9 @@ class TransformerTrain(DeepvacTrain):
     def doLoss(self):
         if not self.config.is_train:
             return
-        super(TransformerTrain, self).doLoss()
+        super(TransformerEncoderTrain, self).doLoss()
 
 if __name__ == "__main__":
-    from config import config
-    train = TransformerTrain(config)
+    from config import encoder_config
+    train = TransformerEncoderTrain(encoder_config)
     train()
