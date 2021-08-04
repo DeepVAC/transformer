@@ -65,7 +65,7 @@ class TransformerTrain(DeepvacTrain):
         num_tokens = src.shape[0]
         src_mask = (torch.zeros(num_tokens, num_tokens)).type(torch.bool)
         tgt_tokens = self.greedy_decode(src, src_mask, max_len=(num_tokens +5)*2, start_symbol=BOS_IDX).flatten()
-        result = self.config.train_dataset.index2string(tgt_tokens.tolist())
+        result = self.config.train_dataset.index2string(tgt_tokens.tolist(), idx=1)
         result = result.replace("BOS_IDX", "").replace("EOS_IDX", "")
         LOG.logI("accept test result: {}".format(result) )
 
