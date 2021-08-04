@@ -20,5 +20,8 @@ python train.py
 python train.py
 ```
 
+# 数据集
+该项目所使用数据集来自：[ancient_morden_chinese](https://github.com/CivilNet/ancient_morden_chinese)
+
 # 配置
 该项目符合DeepVAC规范，相关配置均包含在config.py中，配置项的含义也符合DeepVAC规范，请自行阅读[DeepVAC规范](https://github.com/deepvac/deepvac)。
