@@ -1,9 +1,4 @@
-import os
-import math
-import pickle
 import torch
-from torch import optim
-from torchvision import transforms as trans
 from deepvac import AttrDict, new, interpret, fork
 from data.dataloader import FileLineTranslationDataset, collate_fn, PAD_IDX
 from modules.model import TransformerEncoderNet, TransformerNet

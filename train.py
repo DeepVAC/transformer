@@ -1,9 +1,7 @@
 import sys
 import os
 import math
-import time
 import numpy as np
-import cv2
 import torch
 from torch import nn
 from torch import optim
@@ -52,7 +50,7 @@ class TransformerTrain(DeepvacTrain):
         tgt_input = self.config.target[:-1, :]
         src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = getPosAndPaddingMask(self.config.sample, tgt_input)
         src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = src_mask.to(self.config.device), tgt_mask.to(self.config.device), src_padding_mask.to(self.config.device), tgt_padding_mask.to(self.config.device)
-        logits = self.config.net(self.config.sample, tgt_input, src_mask, tgt_mask,src_padding_mask, tgt_padding_mask, src_padding_mask)
+        logits = self.config.net(self.config.sample, tgt_input, src_mask, tgt_mask, src_padding_mask, tgt_padding_mask, src_padding_mask)
         self.config.output = logits.reshape(-1, logits.shape[-1])
         self.config.target = self.config.target[1:, :].reshape(-1)
 
@@ -64,7 +62,7 @@ class TransformerTrain(DeepvacTrain):
         src = sample_token.view(-1, 1)
         num_tokens = src.shape[0]
         src_mask = (torch.zeros(num_tokens, num_tokens)).type(torch.bool)
-        tgt_tokens = self.greedy_decode(src, src_mask, max_len=(num_tokens +5)*2, start_symbol=BOS_IDX).flatten()
+        tgt_tokens = self.greedy_decode(src, src_mask, max_len=(num_tokens + 5)*2, start_symbol=BOS_IDX).flatten()
         result = self.config.train_dataset.index2string(tgt_tokens.tolist(), idx=1)
         result = result.replace("BOS_IDX", "").replace("EOS_IDX", "")
         LOG.logI("accept test result: {}".format(result) )
@@ -73,9 +71,9 @@ class TransformerTrain(DeepvacTrain):
         src = src.to(self.config.device)
         src_mask = src_mask.to(self.config.device)
         memory = self.config.net.encode(src, src_mask)
+        memory = memory.to(self.config.device)
         ys = torch.ones(1, 1).fill_(start_symbol).type(torch.long).to(self.config.device)
         for i in range(max_len-1):
-            memory = memory.to(self.config.device)
             tgt_mask = (generate_square_subsequent_mask(ys.size(0)).type(torch.bool)).to(self.config.device)
             out = self.config.net.decode(ys, memory, tgt_mask)
             out = out.transpose(0, 1)
